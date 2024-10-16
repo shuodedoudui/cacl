@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多功能计算器</title>
+    <!-- 引入Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.5.0/dist/css/bootstrap.min.css">
+    <style>
+        .calculator-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-gap: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container mt-5">
+        <div class="card">
+            <div class="card-header">
+                <h1 class="text-center">多功能计算器</h1>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <input type="text" class="form-control" id="display" placeholder="0" readonly>
+                </div>
+                <div class="calculator-buttons">
+                    <button class="btn btn-secondary" onclick="appendToDisplay('7')">7</button>
+                    <button class="btn btn-secondary" onclick="appendToDisplay('8')">8</button>
+                    <button class="btn btn-secondary" onclick="appendToDisplay('9')">9</button>
+                    <button class="btn btn-warning" onclick="appendToDisplay('.')">.</button>
+                    <button class="btn btn-warning" onclick="appendToDisplay('/')">/</button>
+
+                    <button class="btn btn-secondary" onclick="appendToDisplay('4')">4</button>
+                    <button class="btn btn-secondary" onclick="appendToDisplay('5')">5</button>
+                    <button class="btn btn-secondary" onclick="appendToDisplay('6')">6</button>
+                    <button class="btn btn-warning" onclick="appendToDisplay('*')">*</button>
+
+                    <button class="btn btn-secondary" onclick="appendToDisplay('1')">1</button>
+                    <button class="btn btn-secondary" onclick="appendToDisplay('2')">2</button>
+                    <button class="btn btn-secondary" onclick="appendToDisplay('3')">3</button>
+                    <button class="btn btn-warning" onclick="appendToDisplay('-')">-</button>
+
+                    <button class="btn btn-secondary" onclick="appendToDisplay('0')">0</button>
+                    <button class="btn btn-success" onclick="calculateResult()">=</button>
+                    <button class="btn btn-danger" onclick="clearDisplay()">C</button>
+                    <button class="btn btn-primary" onclick="appendToDisplay('+')">+</button>
+                    <button class="btn btn-secondary" onclick="calculateSin()">sin</button>
+                    <button class="btn btn-secondary" onclick="calculateCos()">cos</button>
+                    <button class="btn btn-secondary" onclick="calculateTan()">tan</button>
+                    <button class="btn btn-secondary" onclick="calculateCot()">cot</button>
+
+                    <button class="btn btn-secondary" onclick="calculateLn()">ln</button>
+
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.5.0/dist/js/bootstrap.min.js"></script>
+
+    <script>
+        let display = document.getElementById('display');
+        let currentInput = '';
+        let pendingOperation = null; // 用于存储待执行的操作
+        let hasPendingOperation = false; // 用于标记是否有待执行的操作
+
+        function appendToDisplay(value) {
+            if (currentInput === '' && value !== '0') {
+                currentInput = value;
+            } else {
+                currentInput += value;
+            }
+            display.value = currentInput;
+        }
+
+        function clearDisplay() {
+            currentInput = '';
+            display.value = '0';
+            hasPendingOperation = false;
+        }
+
+        function calculateResult() {
+            try {
+                let expression = currentInput;
+
+                // 解析中间的sin、cos、tan、cot、ln运算并执行
+                expression = expression.replace(/sin\((.*?)\)/g, function (match, contents) {
+                    const angle_degrees = parseFloat(contents);
+                    if (!isNaN(angle_degrees)) {
+                        const angle_radians = angle_degrees * (Math.PI / 180);
+                        const sinValue = Math.sin(angle_radians);
+                        return sinValue.toFixed(4);
+                    } else {
+                        return match; // 无效输入，返回原始匹配
+                    }
+                });
+
+                expression = expression.replace(/cos\((.*?)\)/g, function (match, contents) {
+                    const angle_degrees = parseFloat(contents);
+                    if (!isNaN(angle_degrees)) {
+                        const angle_radians = angle_degrees * (Math.PI / 180);
+                        const cosValue = Math.cos(angle_radians);
+                        return cosValue.toFixed(4);
+                    } else {
+                        return match;
+                    }
+                });
+
+                expression = expression.replace(/tan\((.*?)\)/g, function (match, contents) {
+                    const angle_degrees = parseFloat(contents);
+                    if (!isNaN(angle_degrees)) {
+                        const angle_radians = angle_degrees * (Math.PI / 180);
+                        const tanValue = Math.tan(angle_radians);
+                        return tanValue.toFixed(4);
+                    } else {
+                        return match;
+                    }
+                });
+
+                expression = expression.replace(/cot\((.*?)\)/g, function (match, contents) {
+                    const angle_degrees = parseFloat(contents);
+                    if (!isNaN(angle_degrees)) {
+                        const angle_radians = angle_degrees * (Math.PI / 180);
+                        const cotValue = 1 / Math.tan(angle_radians);
+                        return cotValue.toFixed(4);
+                    } else {
+                        return match;
+                    }
+                });
+
+                expression = expression.replace(/ln\((.*?)\)/g, function (match, contents) {
+                    const logarithm = parseFloat(contents);
+                    if (!isNaN(logarithm) && logarithm > 0) {
+                        const lnValue = Math.log(logarithm);
+                        return lnValue.toFixed(4);
+                    } else {
+                        return match;
+                    }
+                });
+
+                // 执行计算
+                currentInput = eval(expression).toString();
+                display.value = currentInput;
+            } catch (error) {
+                display.value = '错误';
+            }
+        }
+
+
+        function calculateSin() {
+            // 从currentInput中找到离sin操作最近的数字
+            const matches = currentInput.match(/(\d+(\.\d+)?)(?!.*\d+\()/g);
+
+            if (matches && matches.length > 0) {
+                const closestNumber = matches[matches.length - 1];
+                const angle_degrees = parseFloat(closestNumber);
+                if (!isNaN(angle_degrees)) {
+                    const angle_radians = angle_degrees * (Math.PI / 180);
+                    const sinValue = Math.sin(angle_radians);
+
+                    // 将最近的数字替换为sin值
+                    currentInput = currentInput.replace(new RegExp(closestNumber), sinValue.toFixed(4));
+
+                    // 更新显示
+                    display.value = currentInput;
+                } else {
+                    display.value = '无效输入';
+                }
+            } else {
+                display.value = '无效输入';
+            }
+        }
+
+
+
+
+        function calculateCos() {
+            const matches = currentInput.match(/(\d+(\.\d+)?)(?!.*\d+\()/g);
+
+            if (matches && matches.length > 0) {
+                const closestNumber = matches[matches.length - 1];
+                const angle_degrees = parseFloat(closestNumber);
+                if (!isNaN(angle_degrees)) {
+                    const angle_radians = angle_degrees * (Math.PI / 180);
+                    const cosValue = Math.cos(angle_radians);
+                    currentInput = currentInput.replace(new RegExp(closestNumber), cosValue.toFixed(4));
+                    display.value = currentInput;
+                } else {
+                    display.value = '无效输入';
+                }
+            } else {
+                display.value = '无效输入';
+            }
+        }
+
+        function calculateTan() {
+            const matches = currentInput.match(/(\d+(\.\d+)?)(?!.*\d+\()/g);
+
+            if (matches && matches.length > 0) {
+                const closestNumber = matches[matches.length - 1];
+                const angle_degrees = parseFloat(closestNumber);
+                if (!isNaN(angle_degrees)) {
+                    const angle_radians = angle_degrees * (Math.PI / 180);
+                    const tanValue = Math.tan(angle_radians);
+                    currentInput = currentInput.replace(new RegExp(closestNumber), tanValue.toFixed(4));
+                    display.value = currentInput;
+                } else {
+                    display.value = '无效输入';
+                }
+            } else {
+                display.value = '无效输入';
+            }
+        }
+
+        function calculateCot() {
+            const matches = currentInput.match(/(\d+(\.\d+)?)(?!.*\d+\()/g);
+
+            if (matches && matches.length > 0) {
+                const closestNumber = matches[matches.length - 1];
+                const angle_degrees = parseFloat(closestNumber);
+                if (!isNaN(angle_degrees)) {
+                    const angle_radians = angle_degrees * (Math.PI / 180);
+                    const cotValue = 1 / Math.tan(angle_radians);
+                    currentInput = currentInput.replace(new RegExp(closestNumber), cotValue.toFixed(4));
+                    display.value = currentInput;
+                } else {
+                    display.value = '无效输入';
+                }
+            } else {
+                display.value = '无效输入';
+            }
+        }
+
+        function calculateLn() {
+            const matches = currentInput.match(/(\d+(\.\d+)?)(?!.*\d+\()/g);
+
+            if (matches && matches.length > 0) {
+                const closestNumber = matches[matches.length - 1];
+                const logarithm = parseFloat(closestNumber);
+                if (!isNaN(logarithm) && logarithm > 0) {
+                    const lnValue = Math.log(logarithm);
+                    currentInput = currentInput.replace(new RegExp(closestNumber), lnValue.toFixed(4));
+                    display.value = currentInput;
+                } else {
+                    display.value = '无效输入';
+                }
+            } else {
+                display.value = '无效输入';
+            }
+        }
+
+        function goToAverageCalculator() {
+            window.open('statistic.html', '_blank');
+        }
+
+    </script>
+</body>
+
+</html>
